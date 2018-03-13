@@ -81,16 +81,19 @@ class BatNode {
 const node2 = new BatNode()
 
 // node2 issues request GET /127.0.0.1:1237
-node2.retrieveFile('example.txt', 1237, '127.0.0.1', (data) => {
-  debugger;
-  file = JSON.parse(data)
-  let contents = JSON.stringify(file.data)
-  const successMessage = (err) => {
-    if (err) throw err;
-    console.log(`${file.fileName}-1 saved to file system!`)
-  }
-  node2.writeFile(`./${HOSTED_DIR}/${file.fileName}-1`, contents, successMessage)
+const nums = [1,2,3,4,5]
+nums.forEach(number => {
+  node2.retrieveFile('example.txt', 1237, '127.0.0.1', (data) => {
+    file = JSON.parse(data)
+    let contents = JSON.stringify(file.data)
+    const successMessage = (err) => {
+      if (err) throw err;
+      console.log(`${file.fileName}-1 saved to file system!`)
+    }
+    node2.writeFile(`./${HOSTED_DIR}/${file.fileName}-${number}`, contents, successMessage)
+  })
 })
+
 
 
 // Another example of BatNode usage...
