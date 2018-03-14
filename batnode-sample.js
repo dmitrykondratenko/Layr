@@ -1,7 +1,6 @@
-const BatNode = require('batnode').BatNode;
+const BatNode = require('./batnode').BatNode;
 const PERSONAL_DIR = require('./utils/file').PERSONAL_DIR;
 const HOSTED_DIR = require('./utils/file').HOSTED_DIR;
-
 
 // Define callback for server to execute when a new connection has been made.
 // The connection object can have callbacks defined on it
@@ -13,7 +12,7 @@ const node1ConnectionCallback = (serverConnection) => {
   serverConnection.on('data', (receivedData, error) => {
    // console.log("received data: ", receivedData)
     receivedData = JSON.parse(receivedData)
-  
+
     //console.log(receivedData, "FROM SERVER")
 
     if (receivedData.messageType === "RETRIEVE_FILE") {

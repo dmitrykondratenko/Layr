@@ -59,7 +59,7 @@ class BatNode {
       }
 
       payload = JSON.stringify(payload)
-    
+
       this.sendDataToNode(port, host, null, payload, null)
     })
   }
@@ -84,7 +84,7 @@ class BatNode {
     client.on('data', (data) => {
       retrievalCallback(data, fileName)
     })
-    
+
     client.write(request)
   }
 }

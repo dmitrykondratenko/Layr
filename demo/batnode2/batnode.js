@@ -9,7 +9,6 @@ const node2 = new BatNode()
 
 // node2 issues request GET /127.0.0.1:1237
 node2.retrieveFile('example.txt', 1237, '127.0.0.1', (data) => {
-  debugger;
   file = JSON.parse(data)
   let contents = JSON.stringify(file.data)
   const successMessage = (err) => {
