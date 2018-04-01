@@ -112,8 +112,8 @@ class BatNode {
     this.kadenceNode.iterativeFindNode(shardId, (err, res) => {
       let i = 0
       let targetKadNode = res[0]; // res is an array of these tuples: [id, {hostname, port}]
-      while (targetKadNode[1].hostname === this.kadenceNode.contact.hostname &&
-             targetKadNode[1].port === this.kadenceNode.contact.port) { // change to identity and re-test
+      // while (targetKadNode[1].hostname === this.kadenceNode.contact.hostname &&
+      while (targetKadNode[1].port === this.kadenceNode.contact.port) { // change to identity and re-test
         i += 1
         targetKadNode = res[i]
       }
@@ -217,10 +217,21 @@ class BatNode {
     const shardAuditData = this.prepareAuditData(shards, shaIds);
     let shaIdx = 0;
 
-    while (shaIds.length > shaIdx) {
-      this.auditShardsGroup(shards, shaIds, shaIdx, shardAuditData);
-      shaIdx += 1;
+    // Promisified
+    const auditShardsGroupSync = async (shards, shaIds, shaIdx, shardAuditData) => {
+      while (shaIds.length > shaIdx) {
+        await this.auditShardsGroup(shards, shaIds, shaIdx, shardAuditData);
+        shaIdx += 1;
+      }
     }
+
+    auditShardsGroupSync(shards, shaIds, shaIdx, shardAuditData);
+
+    // sync
+    // while (shaIds.length > shaIdx) {
+    //   this.auditShardsGroup(shards, shaIds, shaIdx, shardAuditData);
+    //   shaIdx += 1;
+    // }
   }
 
   prepareAuditData(shards, shaIds) {
@@ -243,68 +254,167 @@ class BatNode {
    * array of shard ids it's an object of shard ids and their audit status
   */
   auditShardsGroup(shards, shaIds, shaIdx, shardAuditData, done) {
-    let shardDupIdx = 0;
-    const shaId = shaIds[shaIdx];
+    // Promisified
+    return new Promise((resolve, reject) => {
+      let shardDupIdx = 0;
+      const shaId = shaIds[shaIdx];
+      if (!shaId) { reject(); } // not sure how else to reject
 
-    while (shards[shaId].length > shardDupIdx) {
-      this.auditShard(shards, shardDupIdx, shaId, shaIdx, shardAuditData, done);
-      shardDupIdx += 1;
-    }
+      const auditShardSync = async (shards, shardDupIdx, shaId, shaIdx, shardAuditData, done) => {
+        while (shards[shaId].length > shardDupIdx) {
+          await this.auditShard(shards, shardDupIdx, shaId, shaIdx, shardAuditData, done);
+          shardDupIdx += 1;
+        }
+      }
+
+      auditShardSync(shards, shardDupIdx, shaId, shaIdx, shardAuditData, done);
+      resolve();
+    })
+
+    // Sync
+    // let shardDupIdx = 0;
+    // const shaId = shaIds[shaIdx];
+    // while (shards[shaId].length > shardDupIdx) {
+    //   this.auditShard(shards, shardDupIdx, shaId, shaIdx, shardAuditData, done);
+    //   shardDupIdx += 1;
+    // }
   }
 
   auditShard(shards, shardDupIdx, shaId, shaIdx, shardAuditData, done) {
-    const shardId = shards[shaId][shardDupIdx];
+    return new Promise((resolve, reject) => {
+      const shardId = shards[shaId][shardDupIdx];
 
-    this.kadenceNode.iterativeFindValue(shardId, (error, value, responder) => {
-      if (error) { throw error; }
-      let kadNodeTarget = value.value;
-      this.kadenceNode.getOtherBatNodeContact(kadNodeTarget, (err, batNode) => {
-        if (err) { throw err; }
-        this.auditShardData(batNode, shards, shaIdx, shardDupIdx, shardAuditData)
+      const getShardDataSync = async (batNode, shards, shaIdx, shardDupIdx, shardAuditData) => {
+        await this.auditShardData(batNode, shards, shaIdx, shardDupIdx, shardAuditData)
+      }
+
+      this.kadenceNode.iterativeFindValue(shardId, (error, value, responder) => {
+        if (error) {
+          reject(err);
+          throw error;
+        }
+        let kadNodeTarget = value.value;
+        this.kadenceNode.getOtherBatNodeContact(kadNodeTarget, (err, batNode) => {
+          if (err) {
+            reject(err)
+            throw err;
+          }
+          getShardDataSync(batNode, shards, shaIdx, shardDupIdx, shardAuditData)
+          resolve();
+          // this.auditShardData(batNode, shards, shaIdx, shardDupIdx, shardAuditData)
+        })
       })
     })
+
+    // sync
+    // const shardId = shards[shaId][shardDupIdx];
+    //
+    // this.kadenceNode.iterativeFindValue(shardId, (error, value, responder) => {
+    //   if (error) { throw error; }
+    //   let kadNodeTarget = value.value;
+    //   this.kadenceNode.getOtherBatNodeContact(kadNodeTarget, (err, batNode) => {
+    //     if (err) { throw err; }
+    //     this.auditShardData(batNode, shards, shaIdx, shardDupIdx, shardAuditData)
+    //   })
+    // })
   }
 
   auditShardData(targetBatNode, shards, shaIdx, shardDupIdx, shardAuditData) {
-    let client = this.connect(targetBatNode.port, targetBatNode.host);
+    return new Promise((resolve, reject) => {
+      let client = this.connect(targetBatNode.port, targetBatNode.host);
 
-    const shaKeys = Object.keys(shards);
-    const shaId = shaKeys[shaIdx];
-    const shardId = shards[shaId][shardDupIdx]; // id of a redundant shard for shaId
+      const shaKeys = Object.keys(shards);
+      const shaId = shaKeys[shaIdx];
+      const shardId = shards[shaId][shardDupIdx]; // id of a redundant shard for shaId
 
-    const finalShaGroup = shaKeys.length - 1 === shaIdx;
-    const finalShard = shards[shaId].length - 1 === shardDupIdx;
+      const finalShaGroup = shaKeys.length - 1 === shaIdx;
+      const finalShard = shards[shaId].length - 1 === shardDupIdx;
 
-    let message = {
-      messageType: "AUDIT_FILE",
-      fileName: shardId
-    };
+      let message = {
+        messageType: "AUDIT_FILE",
+        fileName: shardId
+      };
 
-    client.write(JSON.stringify(message), (err) => {
-      if (err) { throw err; }
-    })
+      client.write(JSON.stringify(message), (err) => {
+        if (err) { throw err; }
+      })
 
-    client.on('data', (data) => {
-      const hostShardSha1 = data.toString('utf8');
-      // Check that shard content matches original content SHA
-      if (hostShardSha1 === shaId) {
-        shardAuditData[shaId][shardId] = true;
-      }
-
-      if (finalShaGroup && finalShard) {
-        const hasBaselineRedundancy = this.auditResults(shardAuditData, shaKeys);
-        this.audit.ready = true;
-        this.audit.data = shardAuditData;
-        this.audit.passed = hasBaselineRedundancy;
-
-        console.log(shardAuditData);
-        if (hasBaselineRedundancy) {
-          console.log('Passed audit!');
+      client.on('data', (data) => {
+        const hostShardSha1 = data.toString('utf8');
+        // Check that shard content matches original content SHA
+        if (hostShardSha1 === shaId) {
+          console.log('Shard PASSED audit');
+          console.log(`auditShardData - hostShardSha1/shaId: ${hostShardSha1} / ${shaId}`);
+          shardAuditData[shaId][shardId] = true;
         } else {
-          console.log('Failed Audit');
+          console.log('Shard FAILED audit');
+          console.log(`auditShardData - hostShardSha1/shaId: ${hostShardSha1} / ${shaId}`);
         }
-      }
+
+        if (finalShaGroup && finalShard) {
+          const hasBaselineRedundancy = this.auditResults(shardAuditData, shaKeys);
+          this.audit.ready = true;
+          this.audit.data = shardAuditData;
+          this.audit.passed = hasBaselineRedundancy;
+
+          console.log(shardAuditData);
+          if (hasBaselineRedundancy) {
+            console.log('Passed audit!');
+          } else {
+            console.log('Failed Audit');
+          }
+        }
+        resolve();
+      })
+
+      client.on('error', (err) => { reject(err); })
     })
+
+  // auditShardData(targetBatNode, shards, shaIdx, shardDupIdx, shardAuditData) {
+  //   let client = this.connect(targetBatNode.port, targetBatNode.host);
+  //
+  //   const shaKeys = Object.keys(shards);
+  //   const shaId = shaKeys[shaIdx];
+  //   const shardId = shards[shaId][shardDupIdx]; // id of a redundant shard for shaId
+  //
+  //   const finalShaGroup = shaKeys.length - 1 === shaIdx;
+  //   const finalShard = shards[shaId].length - 1 === shardDupIdx;
+  //
+  //   let message = {
+  //     messageType: "AUDIT_FILE",
+  //     fileName: shardId
+  //   };
+  //
+  //   client.write(JSON.stringify(message), (err) => {
+  //     if (err) { throw err; }
+  //   })
+  //
+  //   client.on('data', (data) => {
+  //     const hostShardSha1 = data.toString('utf8');
+  //     // Check that shard content matches original content SHA
+  //     if (hostShardSha1 === shaId) {
+  //       console.log('Shard PASSED audit');
+  //       console.log(`auditShardData - hostShardSha1/shaId: ${hostShardSha1} / ${shaId}`);
+  //       shardAuditData[shaId][shardId] = true;
+  //     } else {
+  //       console.log('Shard FAILED audit');
+  //       console.log(`auditShardData - hostShardSha1/shaId: ${hostShardSha1} / ${shaId}`);
+  //     }
+  //
+  //     if (finalShaGroup && finalShard) {
+  //       const hasBaselineRedundancy = this.auditResults(shardAuditData, shaKeys);
+  //       this.audit.ready = true;
+  //       this.audit.data = shardAuditData;
+  //       this.audit.passed = hasBaselineRedundancy;
+  //
+  //       console.log(shardAuditData);
+  //       if (hasBaselineRedundancy) {
+  //         console.log('Passed audit!');
+  //       } else {
+  //         console.log('Failed Audit');
+  //       }
+  //     }
+  //   })
   }
 
   auditResults(auditData, shaKeys) {
