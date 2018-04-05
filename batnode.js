@@ -155,10 +155,8 @@ class BatNode {
           this.getClosestBatNodeToShard(copiesOfCurrentShard[copyIdx],  (batNode, kadNode) => {
             this.kadenceNode.getOtherNodeStellarAccount(kadNode, (error, accountId) => {
               console.log("Sending payment to a peer node's Stellar account...")
-              this.sendPaymentFor(accountId, (paymentResult) => {
                 this.sendShardToNode(batNode, copiesOfCurrentShard[copyIdx], copiesOfCurrentShard, copyIdx, shardsOfManifest[distinctIdx], distinctIdx, manifestPath)
               })
-            })
           });
         } else {
           console.log("Uploading shards and copies completed! You can safely remove the files under shards folder from your end now.")
