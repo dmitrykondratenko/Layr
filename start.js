@@ -35,12 +35,11 @@ publicIp.v4().then(ip => {
       console.log('end')
     })
 
-    //const stream = JSONStream.parse();
-    //serverConnection.pipe(stream);
+    const stream = JSONStream.parse();
+    serverConnection.pipe(stream);
 
-    serverConnection.on('data', (receivedData, error) => {
+    stream.on('data', (receivedData, error) => {
       if (error) { throw error; }
-      receivedData = JSON.parse(receivedData)
      console.log("received data: ", receivedData)
 
       if (receivedData.messageType === "RETRIEVE_FILE") {
