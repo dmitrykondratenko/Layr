@@ -125,9 +125,7 @@ class BatNode {
   
     if (shardIdx < shards.length - 1){
       this.getClosestBatNodeToShard(shards[shardIdx + 1], (batNode, kadNode) => {
-        this.kadenceNode.getOtherNodeStellarAccount(kadNode, (error, accountId) => {
             this.sendShardToNode(batNode, shards[shardIdx + 1], shards, shardIdx + 1, storedShardName, distinctIdx, manifestPath)
-        })
       })
     } else {
       this.distributeCopies(distinctIdx + 1, manifestPath)
