@@ -138,10 +138,6 @@ class BatNode {
         this.distributeCopies(distinctIdx + 1, manifestPath)
       }
     })
-
-    client.write(JSON.stringify(message), () => {
-      console.log('Sending shard to a peer node...')
-    });
   }
 
   // Upload file will process the file then send it to the target node
