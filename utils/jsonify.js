@@ -12,7 +12,7 @@ class Jsonify extends Transform {
     this.push(JSON.stringify({
       fileName: this._fileName,
       messageType: this._messageType,
-      fileData: chunk
+      fileContent: chunk
     }))
 
     callback()

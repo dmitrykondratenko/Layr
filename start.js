@@ -52,6 +52,19 @@ publicIp.v4().then(ip => {
           console.log('nodes who stored this value: ', stored)
           let fileContent = new Buffer(receivedData.fileContent)
           let writeStream = fs.createWriteStream(`./hosted/${fileName}`)
+          fs.exists(`./hosted/${fileName}`, (exists) => {
+            if (exists){
+              let readStream = fs.createReadStream(`./hosted/${fileName}`)
+              readStream.pipe(writeStream)
+              readStream.on('end', () => {
+                writeStream.write(fileContent)
+              })
+            } else {
+              writeStream.write(fileContent)
+            }
+          })
+          
+          
           writeStream.write(fileContent)
         })
       } else if (receivedData.messageType === "AUDIT_FILE") {
