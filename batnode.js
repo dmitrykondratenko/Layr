@@ -123,14 +123,15 @@ class BatNode {
     let client = this.connect(port, host)
     readStream.pipe(jsonify).pipe(client)
   
-    if (shardIdx < shards.length - 1){
-      this.getClosestBatNodeToShard(shards[shardIdx + 1], (batNode, kadNode) => {
-            this.sendShardToNode(batNode, shards[shardIdx + 1], shards, shardIdx + 1, storedShardName, distinctIdx, manifestPath)
-      })
-    } else {
-      this.distributeCopies(distinctIdx + 1, manifestPath)
-    }
-
+    jsonify.on('end', () => {
+      if (shardIdx < shards.length - 1){
+        this.getClosestBatNodeToShard(shards[shardIdx + 1], (batNode, kadNode) => {
+              this.sendShardToNode(batNode, shards[shardIdx + 1], shards, shardIdx + 1, storedShardName, distinctIdx, manifestPath)
+        })
+      } else {
+        this.distributeCopies(distinctIdx + 1, manifestPath)
+      }
+    })
   }
 
   // Upload file will process the file then send it to the target node
