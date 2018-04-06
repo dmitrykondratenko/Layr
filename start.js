@@ -36,7 +36,6 @@ publicIp.v4().then(ip => {
     })
 
     const stream = JSONStream.parse();
-    const fileDataStream = JSONStream.parse('receivedData.fileContent.data')
     serverConnection.pipe(stream);
 
     stream.on('data', (receivedData, error) => {
@@ -51,9 +50,9 @@ publicIp.v4().then(ip => {
         let fileName = receivedData.fileName
         batNode.kadenceNode.iterativeStore(fileName, [batNode.kadenceNode.identity.toString(), batNode.kadenceNode.contact], (err, stored) => {
           console.log('nodes who stored this value: ', stored)
-         // let fileContent = new Buffer(receivedData.fileContent)
+          let fileContent = new Buffer(receivedData.fileContent)
           let writeStream = fs.createWriteStream(`./hosted/${fileName}`)
-          stream.pipe(fileDataStream).pipe(writeStream)
+          writeStream.write(fileContent)
         })
       } else if (receivedData.messageType === "AUDIT_FILE") {
         fs.exists(`./hosted/${receivedData.fileName}`, (doesExist) => {

@@ -119,10 +119,15 @@ class BatNode {
 
   sendShardToNode(nodeInfo, shard, shards, shardIdx, storedShardName, distinctIdx, manifestPath) {
     let { port, host } = nodeInfo;
-    let readStream = fs.createReadStream(`./shards/${storedShardName}`);
-    let jsonify = new Jsonify({fileName: shard, messageType: 'STORE_FILE'});
     let client = this.connect(port, host)
-    readStream.pipe(jsonify).pipe(client)
+
+    fs.readFile(`./shards/${storedShardName}`,(data) => {
+      client.write(JSON.stringify({
+        messageType: "STORE_FILE",
+        fileName: shard,
+        fileContent: data
+      }))
+    })
   
 
     if (shardIdx < shards.length - 1){
