@@ -8,6 +8,7 @@ const stellar = require('./utils/stellar').stellar;
 const constants = require('./constants');
 const backoff = require('backoff');
 const Jsonify = require('./utils/jsonify').Jsonify;
+const jsonStream = require('JSONStream');
 
 class BatNode {
   constructor(kadenceNode = {}) {
@@ -121,7 +122,7 @@ class BatNode {
     let readStream = fs.createReadStream(`./shards/${storedShardName}`);
     let jsonify = new Jsonify({fileName: shard, messageType: 'STORE_FILE'});
     let client = this.connect(port, host)
-    readStream.pipe(jsonify).pipe(client)
+    readStream.pipe(jsonify).pipe(jsonStream.stringify()).pipe(client)
   
 
     if (shardIdx < shards.length - 1){
