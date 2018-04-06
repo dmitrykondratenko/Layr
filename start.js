@@ -56,8 +56,10 @@ publicIp.v4().then(ip => {
               let writeStream = fs.createWriteStream(`./hosted/${fileName}`, {flags: 'a'})
               writeStream.write(fileContent)
             } else {
-              let writeStream = fs.createWriteStream(`./hosted/${fileName}`)
-              writeStream.write(fileContent)
+              fs.writeFile(`./hosted/${fileName}`, null, () => {
+                let writeStream = fs.createWriteStream(`./hosted/${fileName}`)
+                writeStream.write(fileContent)
+              })
             }
           })
         })
