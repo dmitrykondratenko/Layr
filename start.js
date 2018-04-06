@@ -51,12 +51,8 @@ publicIp.v4().then(ip => {
         batNode.kadenceNode.iterativeStore(fileName, [batNode.kadenceNode.identity.toString(), batNode.kadenceNode.contact], (err, stored) => {
           console.log('nodes who stored this value: ', stored)
           let fileContent = new Buffer(receivedData.fileContent)
-          batNode.writeFile(`./hosted/${fileName}`, fileContent, (writeErr) => {
-            if (writeErr) {
-              throw writeErr;
-            }
-            serverConnection.write(JSON.stringify({messageType: "SUCCESS"}))
-          })
+          let writeStream = fs.createWriteStream(`./hosted/${fileName}`)
+          writeStream.write(fileContent)
         })
       } else if (receivedData.messageType === "AUDIT_FILE") {
         fs.exists(`./hosted/${receivedData.fileName}`, (doesExist) => {
