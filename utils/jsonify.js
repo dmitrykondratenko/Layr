@@ -5,7 +5,7 @@ class Jsonify extends Transform {
   constructor(options){
     super(options)
     this._fileName = options.fileName;
-    this._messageType = options._messageType;
+    this._messageType = options.messageType;
   }
 
   _transform(chunk, encoding, callback){
