@@ -36,7 +36,7 @@ publicIp.v4().then(ip => {
     })
 
     const stream = JSONStream.parse();
-    const fileDataStream = JSONStream.parse('receivedData.fileContent')
+    const fileDataStream = JSONStream.parse('receivedData.fileContent.data')
     serverConnection.pipe(stream);
 
     stream.on('data', (receivedData, error) => {
